@@ -21,8 +21,6 @@ class AutoDrone (Drone, Thread):
 	CAM_RES = (640,360)
 	VID_PORT = 5555
 
-	# Frames per second
-	PFS = 30
 	# Frames per cmd -> combien de frames on attend pour envoyer une commande
 	DEF_FPC = 3
 
