@@ -22,7 +22,7 @@ try:
 		d.up()
 		sleep(0.5)
 		d.stop()
-	while d.active:
+	while d.isAlive():
 		sleep(0.5)
 	d.land()
 
