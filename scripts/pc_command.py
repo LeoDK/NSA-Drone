@@ -11,16 +11,16 @@ from drone import Drone
 from time import sleep
 
 if len(sys.argv) != 2:
-	print "Usage : ./pc_command.py [speed]\n[speed] is between 0 and 10, but for a basic test, don't go over 4."
-	sys.exit()
+    print "Usage : ./pc_command.py [speed]\n[speed] is between 0 and 10, but for a basic test, don't go over 4."
+    sys.exit()
 
 d = Drone(False, speed=float(sys.argv[1]))
 d.connect()
 
-commands = {	pygame.K_z:d.forward, pygame.K_s:d.backward, pygame.K_d:d.right, pygame.K_q:d.left, 
-		pygame.K_UP:d.up, pygame.K_DOWN:d.down, pygame.K_LEFT:d.rLeft, pygame.K_RIGHT:d.rRight,
-		pygame.K_SPACE:d.takeOff, pygame.K_RETURN:d.land,
-		pygame.K_r:d.resetMagnetometer }
+commands = {pygame.K_z:d.forward, pygame.K_s:d.backward, pygame.K_d:d.right, pygame.K_q:d.left, 
+            pygame.K_UP:d.up, pygame.K_DOWN:d.down, pygame.K_LEFT:d.rLeft, pygame.K_RIGHT:d.rRight,
+            pygame.K_SPACE:d.takeOff, pygame.K_RETURN:d.land,
+            pygame.K_r:d.resetMagnetometer }
 
 print "Commands : \n\
 Forward, backward, right, left : zqsd.\n\
@@ -39,19 +39,19 @@ cont = True
 
 while cont:
 
-	for event in pygame.event.get():
+    for event in pygame.event.get():
 
-		if event.type == pygame.KEYDOWN and event.key in commands:
-			commands[event.key]()
+        if event.type == pygame.KEYDOWN and event.key in commands:
+            commands[event.key]()
 
-		elif event.type == pygame.KEYUP and event.key in commands:
-			d.stop()
+        elif event.type == pygame.KEYUP and event.key in commands:
+            d.stop()
 
-		elif event.type == pygame.QUIT or event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-			cont = False
+        elif event.type == pygame.QUIT or event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            cont = False
 
 
-	sleep(0.02)
+    sleep(0.02)
 
 d.inactivate()
 pygame.quit()
