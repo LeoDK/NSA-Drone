@@ -7,20 +7,20 @@ Tester la caméra du drone
 
 import sys
 sys.path.append("../")
-from autodrone import AutoDrone
+from autodrone import PCAutoDrone
 
-d = AutoDrone(False, verbosity=AutoDrone.QUIET)
+d = PCAutoDrone(False, verbosity=PCAutoDrone.QUIET)
 d.connect()
 d.enableCam()
 
 try:
-	d.viewCam()
-	d.bottomCam()
-	d.viewCam()
-	d.inactivate()
+    d.viewCam()
+    d.bottomCam()
+    d.viewCam()
+    d.inactivate()
 
 except KeyboardInterrupt:
-	d.inactivate()
+    d.inactivate()
 
 except:
-	print "error"
+    print "error"
