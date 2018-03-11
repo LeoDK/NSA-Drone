@@ -67,7 +67,7 @@ class AutoDrone (Drone, Thread):
         self.queue = Queue(self, fpc)
         self.frontCam()
         self.initial_d = initial_d
-        self.autoMove.last_t = datetime.now()
+        self._autoMove_last_t = datetime.now()
         # Contrôleur PID
         self.pid_x = PID(kp=AutoDrone.KP_X, ki=AutoDrone.KI_X, kd=AutoDrone.KD_X)
         self.pid_y = PID(kp=AutoDrone.KP_Y, ki=AutoDrone.KI_Y, kd=AutoDrone.KD_Y)
@@ -133,8 +133,8 @@ class AutoDrone (Drone, Thread):
 
         # Prélèvement du temps
         t = datetime.now()
-        delta_t = (t - self.autoMove.last_t).total_seconds()
-        self.autoMove.last_t = t
+        delta_t = (t - self._autoMove_last_t).total_seconds()
+        self._autoMove_last_t = t
 
         error_x = mid_x - self.ideal_center[0]
         error_y = self.ideal_center[1] - mid_y
