@@ -9,6 +9,7 @@ import numpy as np
 from drone import Drone
 from copy import deepcopy
 from vector import Vector
+from pid import PID
 
 ################################################################################################################
 ###################################        Objet drone qui bouge tout seul     #################################
@@ -35,9 +36,19 @@ class AutoDrone (Drone, Thread):
     DEF_INITIAL_D = 1
 
     # Contrôleur proportionnel
-    K_X = 2
-    K_Y = 2
-    K_Z = 0.8
+    KP_X = 2
+    KP_Y = 2
+    KP_Z = 0.8
+
+    # Contrôleur intégral
+    KI_X = 0.1
+    KI_Y = 0.1
+    KI_Z = 0.1
+
+    # Contrôleur dérivée
+    KD_X = 1
+    KD_Y = 1
+    KD_Z = 1
 
     def __init__(self, stopped, min_speed=DEF_MIN_SPEED, max_speed=DEF_MAX_SPEED, verbosity=Drone.QUIET, fpc=DEF_FPC, initial_d=DEF_INITIAL_D):
         """
@@ -56,6 +67,11 @@ class AutoDrone (Drone, Thread):
         self.queue = Queue(self, fpc)
         self.frontCam()
         self.initial_d = initial_d
+        self.autoMove.last_t = datetime.now()
+        # Contrôleur PID
+        self.pid_x = PID(kp=AutoDrone.KP_X, ki=AutoDrone.KI_X, kd=AutoDrone.KD_X)
+        self.pid_y = PID(kp=AutoDrone.KP_Y, ki=AutoDrone.KI_Y, kd=AutoDrone.KD_Y)
+        self.pid_z = PID(kp=AutoDrone.KP_Z, ki=AutoDrone.KI_Z, kd=AutoDrone.KD_Z)
 
     ################################################################################################################
     ################################################        Vidéo         ##########################################
@@ -110,20 +126,29 @@ class AutoDrone (Drone, Thread):
         """
         [roi] est la zone de l'image où se situe l'objet à suivre.
         Extrapôle le décalage en x,y,z par rapport à la position idéale, et la fournit à la file d'attente.
-        Les vitesses en x,y,z sont modulées proportionnellement à la distance à la position parfaite.
+        Les vitesses en x,y,z sont régulées grâce à un contrôleur PID.
         """
         mid_x = roi[0] + 0.5*roi[2]
         mid_y = roi[1] + 0.5*roi[3]
 
-        # Pour x et y, c'est simple : on regarde l'éloignement par rapport au centre de la frame
-        x_speed = AutoDrone.K_X*(mid_x - self.ideal_center[0]) / AutoDrone.CAM_RES[0]
-        y_speed = AutoDrone.K_Y*(self.ideal_center[1] - mid_y) / AutoDrone.CAM_RES[1]
+        # Prélèvement du temps
+        t = datetime.now()
+        delta_t = (t - self.autoMove.last_t).total_seconds()
+        self.autoMove.last_t = t
+
+        error_x = mid_x - self.ideal_center[0]
+        error_y = self.ideal_center[1] - mid_y
+
+        # Pour x et y, c'est simple : on regarde l'éloignement par rapport au centre de la frame et on y applique un correcteur PID
+        x_speed = self.pid_x.getOrder(error_x, delta_t) / AutoDrone.CAM_RES[0]
+        y_speed = self.pid_y.getOrder(error_y, delta_t) / AutoDrone.CAM_RES[1]
 
         # Pour z, -> cf doc. (formule de trigo). On fait la moyenne des quotients sur x et sur y.
         z_speed = 0
         if roi[2] != 0 and roi[3] != 0:
             d = self.initial_d * ( self.ideal_target[2] / roi[2] + self.ideal_target[3] / roi[3] )/2
-            z_speed = AutoDrone.K_Z*(d-self.initial_d)
+            error_z = d - self.initial_d
+            z_speed = self.pid_z.getOrder(error_z, delta_t)
 
         verif = lambda x : x if -1 < x < 1 else (1.0 if x>0 else -1.0)
         x_speed,y_speed,z_speed = map(verif, (x_speed, y_speed, z_speed))
