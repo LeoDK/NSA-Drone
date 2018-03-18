@@ -36,19 +36,19 @@ class AutoDrone (Drone, Thread):
     DEF_INITIAL_D = 1
 
     # Contrôleur proportionnel
-    KP_X = 2
-    KP_Y = 2
-    KP_Z = 0.8
+    KP_X = 1
+    KP_Y = 1
+    KP_Z = 0.5
 
     # Contrôleur intégral
     KI_X = 0.1
     KI_Y = 0.1
-    KI_Z = 0.1
+    KI_Z = 0.2
 
     # Contrôleur dérivée
-    KD_X = 1
-    KD_Y = 1
-    KD_Z = 1
+    KD_X = 0.2
+    KD_Y = 0.2
+    KD_Z = 0.3
 
     def __init__(self, stopped, min_speed=DEF_MIN_SPEED, max_speed=DEF_MAX_SPEED, verbosity=Drone.QUIET, fpc=DEF_FPC, initial_d=DEF_INITIAL_D):
         """
@@ -148,7 +148,7 @@ class AutoDrone (Drone, Thread):
         if roi[2] != 0 and roi[3] != 0:
             d = self.initial_d * ( self.ideal_target[2] / roi[2] + self.ideal_target[3] / roi[3] )/2
             error_z = d - self.initial_d
-            z_speed = self.pid_z.getOrder(error_z, delta_t)
+            z_speed = -1*self.pid_z.getOrder(error_z, delta_t)
 
         verif = lambda x : x if -1 < x < 1 else (1.0 if x>0 else -1.0)
         x_speed,y_speed,z_speed = map(verif, (x_speed, y_speed, z_speed))
@@ -160,7 +160,7 @@ class AutoDrone (Drone, Thread):
         print "{} {} {}".format(vector.x, vector.y, vector.z)
         self.move(False, 0, vector.z, vector.y, vector.x)
         # DBG
-        #self.move(False, 0, vector.z, 0, 0)
+        #self.move(False, 0, vector.z, 0, vector.x)
 
     @abstractmethod
     def initROI(self):
@@ -196,7 +196,8 @@ class AutoDrone (Drone, Thread):
         self.tracking = self.enableCam()
 
         #1
-        self.initROI()
+        roi = self.initROI()
+        cont, frame = self.cam.read()
 
         #2
         self.ideal_target = (int( (AutoDrone.CAM_RES[0]-roi[2])/2 ), int( (AutoDrone.CAM_RES[1]-roi[3])/2 ), int(roi[2]), int(roi[3]))
