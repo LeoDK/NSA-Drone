@@ -23,7 +23,7 @@ class PID (object):
 
     def integral(self, error, delta_t):
         # Méthode d'approximation des trapèzes
-        self.integral_error += (error - self.last_integral_error) * delta_t + self.last_integral_error * delta_t
+        self.integral_error += (error - self.last_integral_error) * delta_t * 0.5 + self.last_integral_error * delta_t
         self.last_integral_error = error
         return self.integral_error
 
